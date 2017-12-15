@@ -1,5 +1,6 @@
 #include "http.hpp"
 
+#include <array>
 #include <functional>
 #include <iostream>
 #include <sstream>
@@ -139,8 +140,8 @@ void http_connection::on_data(const uvw::DataEvent &event,
     throw http_exception{};
   }
 
-  std::copy(&(event.data[0]), &(event.data[0]) + event.length,
-            back_insert_iterator<vector<char>>(buffer));
+  std::copy_n(&(event.data[0]), event.length,
+              back_insert_iterator<vector<char>>(buffer));
 
   switch (state) {
   case HEADER:
@@ -308,11 +309,11 @@ void http_connection::on_close() {}
 http_connection::~http_connection() {}
 
 bool http_connection::is_complete() {
-  const char needle[] = {'\r', '\n', '\r', '\n'};
+  constexpr array<char, 4> needle = {'\r', '\n', '\r', '\n'};
   size_t pos = last_pos < 3 ? 0 : last_pos - 3;
 
-  if (auto itr =
-          std::search(buffer.begin() + pos, buffer.end(), needle, needle + 4);
+  if (auto itr = std::search(buffer.begin() + pos, buffer.end(), needle.begin(),
+                             needle.end());
       itr != buffer.end()) {
     return true;
   }
