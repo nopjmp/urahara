@@ -309,7 +309,7 @@ void http_connection::on_close() {}
 http_connection::~http_connection() {}
 
 bool http_connection::is_complete() {
-  constexpr array<char, 4> needle = {'\r', '\n', '\r', '\n'};
+  constexpr array<char, 4> needle{{'\r', '\n', '\r', '\n'}};
   size_t pos = last_pos < 3 ? 0 : last_pos - 3;
 
   if (auto itr = std::search(buffer.begin() + pos, buffer.end(), needle.begin(),
