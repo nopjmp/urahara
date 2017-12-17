@@ -321,3 +321,31 @@ bool http_connection::is_complete() {
   last_pos = buffer.size();
   return false;
 }
+
+string http_response::build() {
+  string resp = "HTTP/1.1 ";
+
+  // http protocol header line
+  resp.append(to_string(status_code));
+  resp.append(" ");
+  resp.append(status_msg);
+  resp.append("\r\n");
+
+  // http headers
+  auto typeitr = headers.find("Content-Type");
+  if (typeitr == headers.end()) {
+    headers.emplace("Content-Type", "text/html");
+  }
+
+  for (auto &pair : headers) {
+    resp.append(pair.first);
+    resp.append(": ");
+    resp.append(pair.second);
+    resp.append("\r\n");
+  }
+
+  resp.append("\r\n");
+  resp.append(content);
+
+  return resp;
+}
