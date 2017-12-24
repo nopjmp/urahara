@@ -37,6 +37,10 @@ void http::run(http_connection::callback_fn func) {
                 http_conn->on_data(event, client);
               } catch (http_exception &e) {
                 // TODO: print these?
+                if (client.writable()) {
+                  auto str = e.as_http().build();
+                  client.write(const_cast<char *>(str.c_str()), str.length());
+                }
                 client.close();
               }
             });
@@ -183,7 +187,7 @@ void http_connection::on_start(uvw::TcpHandle &client) {
   }
 
   // parse out the method, path, and version
-  size_t index = data.find_first_of(' ');
+  size_t index = data.find(' ');
   result.method = data.substr(0, index);
   check_valid(result.method, true, true);
   data.remove_prefix(index + 1);
@@ -192,7 +196,7 @@ void http_connection::on_start(uvw::TcpHandle &client) {
     throw http_exception{};
   }
 
-  index = data.find_first_of(' ');
+  index = data.find(' ');
   result.path = data.substr(0, index);
   check_valid(result.path, true, false);
   data.remove_prefix(index + 1);
@@ -347,5 +351,12 @@ string http_response::build() {
   resp.append("\r\n");
   resp.append(content);
 
+  return resp;
+}
+
+http_response http_exception::as_http() {
+  http_response resp{};
+  resp.set_status(status, error_msg);
+  resp.set_content(error_msg);
   return resp;
 }

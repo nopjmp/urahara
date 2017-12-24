@@ -17,14 +17,6 @@ constexpr size_t MAX_REQUEST_LEN = 10 * 1024 * 1024; // 10MB
 
 using http_headers = unordered_map<string, string>;
 
-struct http_exception : public exception {
-  int status;
-  const char *error_msg;
-  http_exception() : status(500), error_msg("Internal Server Error") {}
-  http_exception(int status, const char *error_msg)
-      : status(status), error_msg(error_msg) {}
-};
-
 struct http_data {
   string method;
   string path;
@@ -42,6 +34,11 @@ struct http_response {
 
   http_response() : status_code(200), status_msg("OK") {}
 
+  void set_status(int code, string msg) {
+    status_code = code;
+    status_msg = msg;
+  }
+
   void set_content_type(const char *type) {
     headers.insert_or_assign("Content-Type", type);
   }
@@ -56,6 +53,16 @@ struct http_response {
   }
 
   string build();
+};
+
+struct http_exception : public exception {
+  int status;
+  const char *error_msg;
+  http_exception() : status(500), error_msg("Internal Server Error") {}
+  http_exception(int status, const char *error_msg)
+      : status(status), error_msg(error_msg) {}
+
+  http_response as_http();
 };
 
 struct http_connection {
