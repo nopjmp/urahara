@@ -91,6 +91,8 @@ struct http_connection {
     buffer.clear();
   }
 
+  string_view parse();
+
   // events
   void on_data(const uvw::DataEvent &, uvw::TcpHandle &client);
   void on_start(uvw::TcpHandle &client);

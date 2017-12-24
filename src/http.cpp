@@ -162,17 +162,7 @@ void http_connection::on_data(const uvw::DataEvent &event,
   }
 }
 
-void http_connection::on_start(uvw::TcpHandle &client) {
-  if (!is_complete()) {
-    // we need more data
-    return;
-  }
-
-  if (buffer.size() < 9) {
-    client.close();
-    return;
-  }
-
+string_view http_connection::parse() {
   string_view data{buffer.data(), buffer.size()};
 
   // skip first newline
@@ -243,11 +233,31 @@ void http_connection::on_start(uvw::TcpHandle &client) {
       if (!(c == ' ' || c == '\t')) {
         break;
       }
+
       header_block.remove_prefix(1);
+
+      if (header_block.length() == 0) {
+        break;
+      }
     }
 
     result.headers.emplace(name, header_block);
   }
+
+  return data;
+}
+
+void http_connection::on_start(uvw::TcpHandle &client) {
+  if (!is_complete()) {
+    // we need more data
+    return;
+  }
+
+  if (buffer.size() < 9) {
+    throw http_exception{};
+  }
+
+  auto data = parse();
 
   if (auto itr = result.headers.find("Content-Length");
       itr != result.headers.end()) {
