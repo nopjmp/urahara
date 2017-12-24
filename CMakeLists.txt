@@ -23,3 +23,18 @@ target_link_libraries(urahara PUBLIC
   Threads::Threads
   uv
 )
+###########################
+# Testing
+###########################
+enable_testing()
+
+SET(HTTPTEST_SRC test/http.cpp src/http.cpp include/catch.hpp include/http.hpp include/uvw.hpp)
+
+add_executable(httptest ${HTTPTEST_SRC})
+target_compile_options(httptest PUBLIC -fno-rtti)
+target_include_directories(httptest PUBLIC test src include)
+target_link_libraries(httptest PUBLIC 
+  Threads::Threads
+  uv
+)
+add_test(NAME HttpTest COMMAND httptest)
