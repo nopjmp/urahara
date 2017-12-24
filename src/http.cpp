@@ -1,6 +1,7 @@
 #include "http.hpp"
 
 #include <array>
+#include <cctype>
 #include <functional>
 #include <iostream>
 #include <sstream>
@@ -116,9 +117,9 @@ static tuple<size_t, int> find_eol(string_view data) {
   // this is fairly hot path and could use some help from SSE4.2 instructions
   size_t i;
   for (i = 0; i < data.length(); ++i) {
-    char c = data[i];
+    unsigned char c = data[i];
     // allow HT
-    if ((c < '\040' && c != '\011') || c == '\177') {
+    if (!isprint(c) && ((c < '\040' && c != '\011') || c == '\177')) {
       break;
     }
   }

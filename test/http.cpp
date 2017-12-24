@@ -57,4 +57,23 @@ TEST_CASE("REQUEST", "[http]") {
     REQUIRE_THAT(c.result.headers["Host"], Equals("example.com"));
     REQUIRE_THAT(c.result.headers["Cookie"], Equals(""));
   }
+
+  SECTION("parse multibyte") {
+    http_data data;
+    http_connection c{[&](http_connection *, uvw::TcpHandle &, http_data) {}};
+
+    const char testdata[] = "GET /test HTTP/1.1\r\n"
+                            "Host: example.com\r\n"
+                            "User-Agent: \343\201\262\343/1.0\r\n\r\n";
+    c.buffer.assign(testdata, testdata + sizeof(testdata) - 1);
+    c.parse();
+
+    REQUIRE(c.result.headers.size() == 2);
+    REQUIRE_THAT(c.result.method, Equals("GET"));
+    REQUIRE_THAT(c.result.path, Equals("/test"));
+    REQUIRE_THAT(c.result.version, Equals("HTTP/1.1"));
+    REQUIRE_THAT(c.result.headers["Host"], Equals("example.com"));
+    REQUIRE_THAT(c.result.headers["User-Agent"],
+                 Equals("\343\201\262\343/1.0"));
+  }
 }
